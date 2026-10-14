@@ -1,0 +1,44 @@
+version: '3'
+
+vars:
+  PROFILE: '{{.PROFILE | default "base"}}'
+
+tasks:
+  default:
+    desc: Construire le composant k0s
+    cmds:
+      - task: build
+
+  build:
+    desc: Construire k0s avec KAS/Yocto
+    requires: &profile
+      vars:
+        - name: PROFILE
+          enum: [base]
+    cmds:
+      - bash build/build.sh {{.PROFILE | shellQuote}}
+
+  package:
+    desc: Exporter le composant public k0s
+    requires: *profile
+    cmds:
+      - python3 build/package.py --profile {{.PROFILE | shellQuote}}
+
+  oci:
+    desc: Construire l’image OCI à partir de l’export existant
+    requires: *profile
+    vars:
+      COMPONENT_VERSION:
+        sh: cat VERSION
+    cmds:
+      - >-
+        podman build --platform linux/arm64 --ignorefile build/containerignore
+        -f build/Containerfile --build-arg VERSION={{.COMPONENT_VERSION | shellQuote}}
+        -t localhost/pantavisor-k0s:{{.PROFILE}}
+        {{printf "dist/%s" .PROFILE | shellQuote}}
+
+  check:
+    desc: Exécuter les tests et vérifier la syntaxe du script de build
+    cmds:
+      - python3 -m unittest discover -s tests -v
+      - bash -n build/build.sh

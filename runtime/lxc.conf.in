@@ -1,0 +1,27 @@
+lxc.uts.name = ${node_name}
+lxc.init.cmd = /usr/sbin/init.lxc.static --name k0s -- /usr/libexec/pantavisor/k0s-init
+lxc.signal.halt = SIGTERM
+lxc.rootfs.path = overlay:/volumes/k0s/root.squashfs:/volumes/k0s/lxc-overlay/upper
+lxc.mount.auto = proc:rw sys:rw cgroup:rw:force
+lxc.autodev = 1
+lxc.tty.max = 0
+lxc.pty.max = 16
+lxc.console.path = none
+lxc.apparmor.profile = unconfined
+lxc.net.0.type = none
+lxc.cap.drop = sys_boot sys_time
+lxc.cgroup2.memory.max = ${memory_max}
+lxc.cgroup2.memory.high = ${memory_high}
+lxc.cgroup2.pids.max = 8192
+lxc.cgroup2.devices.allow = a
+lxc.mount.entry = ${data_source} var/lib/k0s none rbind,create=dir 0 0
+lxc.mount.entry = ${workloads_source} data none rbind,create=dir 0 0
+lxc.mount.entry = ${access_source} access none bind,create=dir 0 0
+lxc.mount.entry = ${log_source} var/log none rbind,create=dir 0 0
+lxc.mount.entry = /lib/modules lib/modules none bind,ro,create=dir 0 0
+lxc.mount.entry = /dev/kmsg dev/kmsg none bind,ro,create=file 0 0
+lxc.mount.entry = ${control_source} clock-status none bind,ro,create=dir 0 0
+lxc.mount.entry = /boot/config-${kernel_release} boot/config-${kernel_release} none bind,ro,create=file 0 0
+lxc.mount.entry = tmpfs run tmpfs nosuid,nodev,mode=0755,create=dir 0 0
+lxc.mount.entry = tmpfs tmp tmpfs nosuid,nodev,mode=1777,create=dir 0 0
+lxc.mount.entry = tmpfs dev/shm tmpfs nosuid,nodev,mode=1777,size=64m,create=dir 0 0

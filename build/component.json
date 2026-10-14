@@ -1,0 +1,7 @@
+{
+  "repository": "tdesaules/pantavisor-k0s",
+  "image": "pantavisor-k0s-image",
+  "machine": "userspace-arm64",
+  "profiles": {"base": {"name": "k0s", "features": ["kubernetes-server"]}},
+  "upstream": {"k0s": "v1.36.4+k0s.1"}
+}

@@ -1,0 +1,8 @@
+FROM scratch AS runtime
+ARG VERSION
+ADD rootfs.tar.gz /
+USER 0:0
+ENTRYPOINT ["/usr/sbin/init.lxc.static", "--name", "k0s", "--", "/usr/libexec/pantavisor/k0s-init"]
+LABEL org.opencontainers.image.source="https://github.com/tdesaules/pantavisor-k0s" \
+      org.opencontainers.image.title="Pantavisor k0s system service" \
+      org.opencontainers.image.version="$VERSION"

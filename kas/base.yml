@@ -1,0 +1,49 @@
+header:
+  version: 16
+machine: userspace-arm64
+distro: panta-distro-bsp
+target:
+  - pantavisor-k0s-image
+repos:
+  project:
+    path: .
+    layers:
+      build/meta-k0s:
+  meta-pantavisor:
+    url: https://github.com/pantavisor/meta-pantavisor.git
+    commit: cac393c28b0e44c5229fef6f1c516c3ec6bc87bb
+    path: artifacts/meta-pantavisor
+  poky:
+    url: https://github.com/yoctoproject/poky.git
+    commit: b2c16f1e69130558574e1363aff944647fa9cd11
+    path: artifacts/layers/poky
+    layers:
+      meta:
+      meta-poky:
+  meta-openembedded:
+    url: https://github.com/openembedded/meta-openembedded.git
+    commit: b5874ea07d69919d9b40d59f2c2f0bbd24bc3259
+    path: artifacts/layers/meta-openembedded
+    layers:
+      meta-oe:
+      meta-python:
+      meta-networking:
+      meta-filesystems:
+  meta-virtualization:
+    url: https://git.yoctoproject.org/meta-virtualization
+    commit: f980aefbc8b3eeafb8d144e7fdac3c3b701a4fea
+    path: artifacts/layers/meta-virtualization
+local_conf_header:
+  component: |
+    TCLIBC = "musl"
+    PACKAGE_CLASSES = "package_rpm"
+    BB_NUMBER_THREADS = "4"
+    PARALLEL_MAKE = "-j 4"
+    INHERIT += "rm_work"
+    DISTRO_FEATURES:append = " pantavisor-system"
+    PANTAVISOR_FEATURES:append = " automod dm-crypt dm-verity"
+    PANTAVISOR_FEATURES:remove = " autogrow tailscale runc xconnect-dbus-systembus"
+    PREFERRED_VERSION_pvgo-binary-native = "1.24.13"
+    PACKAGECONFIG:append:pn-kmod = " zstd"
+    DL_DIR = "/work/artifacts/downloads"
+    SSTATE_DIR = "/work/artifacts/sstate-cache"

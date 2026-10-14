@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "pantavisor-k0s-v1",
+  "architecture": "arm64",
+  "entrypoint": ["/usr/sbin/init.lxc.static", "--name", "k0s", "--", "/usr/libexec/pantavisor/k0s-init"],
+  "configuration": ["/etc/pantavisor/k0s.env"],
+  "persistentTargets": ["/var/lib/k0s", "/data", "/var/log", "/access"],
+  "storageFilesystems": ["ext4"],
+  "requires": ["host-network", "delegated-cgroup-v2", "nested-containers", "kernel-modules", "kernel-config", "synchronized-time"],
+  "readiness": "Pantavisor STARTED is not Kubernetes Ready",
+  "timeSignal": "/clock-status/time-ready",
+  "adminConfig": "/access/admin.conf"
+}
