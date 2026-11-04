@@ -2,6 +2,8 @@
 # A failed cluster stays inspectable without taking down the management core.
 set -eu
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Deployment configuration is mounted by System at runtime.
+# shellcheck source=/dev/null
 [ ! -f /etc/pantavisor/k0s.env ] || . /etc/pantavisor/k0s.env
 K0S_NODE_NAME=${K0S_NODE_NAME:-pantavisor-k0s}
 K0S_CLUSTER_NAME=${K0S_CLUSTER_NAME:-pantavisor}
@@ -29,6 +31,7 @@ failed() {
     while :; do sleep 5 & child=$!; wait "$child" || true; done
 }
 echo 'phase=preflight' > /access/status
+rm -f /access/admin.conf
 grep -q ' /var/lib/k0s ext4 ' /proc/mounts || failed persistent-storage
 test -f /sys/fs/cgroup/cgroup.controllers || failed cgroup-v2
 echo 'phase=waiting-for-time' > /access/status
@@ -36,9 +39,13 @@ until [ -s /clock-status/time-ready ] && [ "$(date +%s)" -ge 1735689600 ]; do sl
 mount --make-rshared /
 # Writable leaf for the node processes, with controllers delegated to pods.
 mkdir -p /sys/fs/cgroup/k0s-system
+# Snapshot the PIDs before moving them out of this changing pseudo-file.
+# shellcheck disable=SC2013
 for pid in $(cat /sys/fs/cgroup/cgroup.procs); do
     echo "$pid" > /sys/fs/cgroup/k0s-system/cgroup.procs 2>/dev/null || true
 done
+# This kernel interface is a whitespace-separated list, not one item per line.
+# shellcheck disable=SC2013
 for controller in $(cat /sys/fs/cgroup/cgroup.controllers); do
     echo "+$controller" > /sys/fs/cgroup/cgroup.subtree_control
 done
@@ -111,8 +118,12 @@ while kill -0 "$child" 2>/dev/null; do
         sed "s#https://localhost:6443#https://$ip:6443#g; s#https://127.0.0.1:6443#https://$ip:6443#g" /var/lib/k0s/pki/admin.conf > /access/admin.conf.new
         chmod 600 /access/admin.conf.new
         mv /access/admin.conf.new /access/admin.conf
-        echo 'phase=running' > /access/status
-        break
+        echo 'phase=api-configured' > /access/status
+        if k0s kubectl get --raw=/readyz >/dev/null 2>&1 &&
+           k0s kubectl wait --for=condition=Ready "node/$K0S_NODE_NAME" --timeout=5s >/dev/null 2>&1; then
+            echo 'phase=ready' > /access/status
+            break
+        fi
     fi
     sleep 2
 done
