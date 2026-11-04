@@ -1,0 +1,51 @@
+name: Cold build and release
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the VERSION tag after validation
+        type: boolean
+        default: false
+permissions:
+  contents: read
+  packages: write
+concurrency: release
+jobs:
+  build:
+    runs-on: [self-hosted, linux, x64, pantavisor]
+    timeout-minutes: 720
+    defaults:
+      run:
+        working-directory: source-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: source-${{ github.run_id }}-${{ github.run_attempt }}
+      - uses: oras-project/setup-oras@v1
+        with:
+          version: 1.2.2
+      - name: Cold build without download or sstate cache
+        run: |
+          test ! -e artifacts
+          python3 -m unittest discover -s tests -v
+          env -u DOWNLOAD_CACHE -u SSTATE_CACHE bash build/build.sh
+          python3 build/package.py
+          python3 build/smoke.py dist/base
+          podman build --platform linux/arm64 --ignorefile build/containerignore -f build/Containerfile --build-arg VERSION="$(cat VERSION)" -t "localhost/pantavisor-k0s:$(cat VERSION)" dist/base
+      - uses: actions/upload-artifact@v4
+        with:
+          name: k0s-public
+          path: source-${{ github.run_id }}-${{ github.run_attempt }}/dist/base/
+          if-no-files-found: error
+      - name: Publish OCI image and component
+        if: inputs.publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_ACTOR: ${{ github.actor }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          test "$GITHUB_REF" = "refs/tags/v$(cat VERSION)"
+          printf '%s' "$GH_TOKEN" | podman login ghcr.io -u "$GH_ACTOR" --password-stdin
+          printf '%s' "$GH_TOKEN" | oras login ghcr.io -u "$GH_ACTOR" --password-stdin
+          podman push "localhost/pantavisor-k0s:$(cat VERSION)" "docker://ghcr.io/$REPOSITORY:$(cat VERSION)"
+          python3 build/publish.py dist/base "ghcr.io/$REPOSITORY/component"

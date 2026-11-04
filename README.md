@@ -31,7 +31,7 @@ task oci
 ```
 
 L'export public est dans `dist/base/` ; l'image locale est
-`localhost/pantavisor-k0s:base`, avec le label de version `0.1.0`.
+`localhost/pantavisor-k0s:0.1.0`, avec le label de version `0.1.0`.
 Les répertoires d'export doivent être nouveaux ; `build/package.py --output`
 permet de conserver plusieurs résultats locaux.
 
@@ -64,4 +64,9 @@ hors du périmètre de cette image.
 Projet neuf, sans reprise d'historique Git. Build local, packaging, image OCI et
 exécution ARM64 de `k0s version` vérifiés. System sait composer et rendre l'état
 privé avec cet artefact. Le cluster complet n'a pas été requalifié sur matériel
-après ce découpage ; la CI sera traitée ultérieurement.
+après ce découpage. Les workflows CI/build froid/publication sont décrits dans
+[l'automatisation](docs/automation.md). System fournit maintenant le scénario
+fonctionnel VM ; son succès doit être enregistré avant de qualifier une version.
+
+Voir la [migration CI vers les Docker Actions](docs/ci-migration.md) pour activer
+le nouveau workflow après publication du catalogue.

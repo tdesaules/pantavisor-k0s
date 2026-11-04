@@ -34,7 +34,7 @@ tasks:
       - >-
         podman build --platform linux/arm64 --ignorefile build/containerignore
         -f build/Containerfile --build-arg VERSION={{.COMPONENT_VERSION | shellQuote}}
-        -t localhost/pantavisor-k0s:{{.PROFILE}}
+        -t {{printf "localhost/pantavisor-k0s:%s" .COMPONENT_VERSION | shellQuote}}
         {{printf "dist/%s" .PROFILE | shellQuote}}
 
   check:
