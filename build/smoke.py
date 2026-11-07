@@ -17,7 +17,9 @@ with (args.component / 'rootfs.squashfs').open('rb') as stream:
 with tempfile.TemporaryDirectory() as temporary:
     directory = Path(temporary)
     root = directory / 'root'
-    subprocess.run(['unsquashfs', '-no-progress', '-d', str(root), str(args.component / 'rootfs.squashfs')],
+    # Version checks need file contents, not privileged capability xattrs. Only
+    # this temporary extraction omits xattrs; the verified archive stays intact.
+    subprocess.run(['unsquashfs', '-no-progress', '-no-xattrs', '-d', str(root), str(args.component / 'rootfs.squashfs')],
                    stdout=subprocess.DEVNULL, check=True)
     home = directory / 'home'
     home.mkdir()
