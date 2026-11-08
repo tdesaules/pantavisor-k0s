@@ -35,13 +35,14 @@ référence immuable publiée. Le smoke test producteur ne signifie pas nœud Re
 
 ## Prérequis et suivi
 
-Configurer la variable `RELEASE_APP_ID`, le secret `RELEASE_APP_PRIVATE_KEY` et
+Configurer la variable `BOT_APP_ID`, le secret `BOT_APP_PRIVATE_KEY` et
 l'installation de l'App avec les droits nécessaires. Son accès est testé avant
 le build de préparation. Le token GitHub ordinaire n'est pas utilisé pour pousser
 le tag de préparation.
 
-Configurer un `RENOVATE_TOKEN` dédié et éviter une seconde instance de Renovate
-hébergée. Les managers actions/Containerfiles sont configurés ; les recettes
+Renovate utilise un token temporaire de cette même App, autorisée à écrire le
+contenu et les pull requests du dépôt ; aucun `RENOVATE_TOKEN` séparé n'est requis.
+Éviter une seconde instance hébergée. Les managers actions/Containerfiles sont configurés ; les recettes
 k0s et leurs checksums restent à mettre à jour conjointement.
 
 Surveiller les artefacts `build-diagnostics-k0s`, `test-reports-k0s`, les reçus
