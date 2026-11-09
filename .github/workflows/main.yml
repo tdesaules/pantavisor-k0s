@@ -42,14 +42,14 @@ jobs:
         with: {fetch-depth: 0, persist-credentials: false}
       - name: Read changed files
         id: files
-        uses: tdesaules/github-actions/workflow/get-changed-files@1.5.0
+        uses: tdesaules/github-actions/workflow/get-changed-files@1.6.1
         with:
           before: ${{ github.event.before }}
           after: ${{ github.sha }}
           full: ${{ github.event_name != 'push' || github.ref_type == 'tag' }}
       - name: Select work
         id: select
-        uses: tdesaules/github-actions/workflow/get-pantavisor-targets@1.5.0
+        uses: tdesaules/github-actions/workflow/get-pantavisor-targets@1.6.1
         with:
           project: ${{ env.PROJECT }}
           files: ${{ steps.files.outputs.files }}
@@ -57,7 +57,7 @@ jobs:
       - name: Prepare release candidate
         id: candidate
         if: github.event_name == 'workflow_dispatch'
-        uses: tdesaules/github-actions/workflow/new-pantavisor-candidate@1.5.0
+        uses: tdesaules/github-actions/workflow/new-pantavisor-candidate@1.6.1
         with:
           project: ${{ env.PROJECT }}
       - name: Check release App access before building
@@ -71,7 +71,7 @@ jobs:
           permission-contents: write
       - name: Test producer contracts
         if: steps.select.outputs.check-required == 'true'
-        uses: tdesaules/github-actions/check/test-python@1.5.0
+        uses: tdesaules/github-actions/check/test-python@1.6.1
         with:
           tests-directory: tests
       - name: Retain exact candidate commit
@@ -90,27 +90,27 @@ jobs:
         with: {persist-credentials: false}
       - name: Actionlint
         if: needs.check.outputs.actionlint != '[]'
-        uses: tdesaules/github-actions/lint/actionlint@1.5.0
+        uses: tdesaules/github-actions/lint/actionlint@1.6.1
         with: {files: '${{ needs.check.outputs.actionlint }}'}
       - name: Hadolint
         if: needs.check.outputs.hadolint != '[]'
-        uses: tdesaules/github-actions/lint/hadolint@1.5.0
+        uses: tdesaules/github-actions/lint/hadolint@1.6.1
         with: {files: '${{ needs.check.outputs.hadolint }}'}
       - name: ShellCheck
         if: needs.check.outputs.shellcheck != '[]'
-        uses: tdesaules/github-actions/lint/shellcheck@1.5.0
+        uses: tdesaules/github-actions/lint/shellcheck@1.6.1
         with: {files: '${{ needs.check.outputs.shellcheck }}'}
       - name: YAML
         if: needs.check.outputs.yaml != '[]'
-        uses: tdesaules/github-actions/lint/yaml@1.5.0
+        uses: tdesaules/github-actions/lint/yaml@1.6.1
         with: {files: '${{ needs.check.outputs.yaml }}'}
       - name: Markdown
         if: needs.check.outputs.markdown != '[]'
-        uses: tdesaules/github-actions/lint/markdownlint@1.5.0
+        uses: tdesaules/github-actions/lint/markdownlint@1.6.1
         with: {files: '${{ needs.check.outputs.markdown }}'}
       - name: Local links
         if: needs.check.outputs.links != '[]'
-        uses: tdesaules/github-actions/lint/lychee@1.5.0
+        uses: tdesaules/github-actions/lint/lychee@1.6.1
         with: {files: '${{ needs.check.outputs.links }}'}
   build:
     needs: [check, lint]
@@ -128,19 +128,19 @@ jobs:
         with: {artifact-ids: '${{ needs.check.outputs.candidate-id }}', path: artifacts/release, merge-multiple: true}
       - name: Import candidate
         if: github.event_name == 'workflow_dispatch'
-        uses: tdesaules/github-actions/workflow/import-pantavisor-candidate@1.5.0
+        uses: tdesaules/github-actions/workflow/import-pantavisor-candidate@1.6.1
       - name: Build with KAS
-        uses: tdesaules/github-actions/workflow/build-pantavisor@1.5.0
+        uses: tdesaules/github-actions/workflow/build-pantavisor@1.6.1
         with: {project: '${{ env.PROJECT }}', cold: 'true'}
       - name: Package public component
-        uses: tdesaules/github-actions/workflow/package-pantavisor-component@1.5.0
+        uses: tdesaules/github-actions/workflow/package-pantavisor-component@1.6.1
       - name: Verify component
-        uses: tdesaules/github-actions/oci/test-component@1.5.0
+        uses: tdesaules/github-actions/oci/test-component@1.6.1
         with: {directory: dist/component}
       - name: Assemble ARM64 OCI archive without execution
-        uses: tdesaules/github-actions/oci/new-rootfs-image@1.5.0
+        uses: tdesaules/github-actions/oci/new-rootfs-image@1.6.1
       - name: Record untested outputs
-        uses: tdesaules/github-actions/workflow/new-pantavisor-receipt@1.5.0
+        uses: tdesaules/github-actions/workflow/new-pantavisor-receipt@1.6.1
         with:
           project: ${{ env.PROJECT }}
           revision: ${{ needs.check.outputs.revision }}
@@ -175,25 +175,25 @@ jobs:
         with: {artifact-ids: '${{ needs.check.outputs.candidate-id }}', path: artifacts/release, merge-multiple: true}
       - name: Import candidate
         if: github.event_name == 'workflow_dispatch'
-        uses: tdesaules/github-actions/workflow/import-pantavisor-candidate@1.5.0
+        uses: tdesaules/github-actions/workflow/import-pantavisor-candidate@1.6.1
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with: {artifact-ids: '${{ needs.build.outputs.artifact-id }}', path: ., merge-multiple: true}
       - name: Verify transferred outputs
-        uses: tdesaules/github-actions/workflow/test-pantavisor-artifact@1.5.0
+        uses: tdesaules/github-actions/workflow/test-pantavisor-artifact@1.6.1
         with: {revision: '${{ needs.check.outputs.revision }}'}
       - name: Test rootfs executables
-        uses: tdesaules/github-actions/workflow/test-pantavisor-rootfs@1.5.0
+        uses: tdesaules/github-actions/workflow/test-pantavisor-rootfs@1.6.1
       - name: Generate image SBOM
         id: security-spdx
         continue-on-error: true
-        uses: tdesaules/github-actions/oci/new-sbom@1.5.0
+        uses: tdesaules/github-actions/oci/new-sbom@1.6.1
         with:
           source: oci-archive:dist/image.oci.tar
           output: artifacts/reports/sbom.spdx.json
       - name: Capture scan evidence
         id: security-sbom
         continue-on-error: true
-        uses: tdesaules/github-actions/oci/new-sbom@1.5.0
+        uses: tdesaules/github-actions/oci/new-sbom@1.6.1
         env:
           SYFT_GOLANG_CAPTURE_SYMBOLS: all
           SYFT_FILE_METADATA_SELECTION: all
@@ -205,7 +205,7 @@ jobs:
         id: security-scan
         if: steps.security-sbom.outcome == 'success'
         continue-on-error: true
-        uses: tdesaules/github-actions/oci/test-vulnerabilities@1.5.0
+        uses: tdesaules/github-actions/oci/test-vulnerabilities@1.6.1
         with:
           fail-on: none
           sbom: artifacts/reports/sbom.syft.json
@@ -213,7 +213,7 @@ jobs:
       - name: Summarize advisory security outcomes
         if: always()
         continue-on-error: true
-        uses: tdesaules/github-actions/workflow/test-step-outcomes@1.5.0
+        uses: tdesaules/github-actions/workflow/test-step-outcomes@1.6.1
         env:
           SECURITY_COMPONENT: ${{ env.PROJECT }}
           SECURITY_ARCHITECTURE: arm64
@@ -223,7 +223,7 @@ jobs:
         with:
           outcomes: ${{ toJSON(steps) }}
       - name: Record successful qualification
-        uses: tdesaules/github-actions/workflow/new-pantavisor-qualification@1.5.0
+        uses: tdesaules/github-actions/workflow/new-pantavisor-qualification@1.6.1
         with: {revision: '${{ needs.check.outputs.revision }}'}
       - name: Transfer exact qualified outputs
         id: qualified-upload
@@ -254,7 +254,7 @@ jobs:
       - name: Validate release tag and preparation run
         if: github.ref_type == 'tag'
         id: provenance
-        uses: tdesaules/github-actions/workflow/read-pantavisor-release@1.5.0
+        uses: tdesaules/github-actions/workflow/read-pantavisor-release@1.6.1
         with: {token: '${{ github.token }}'}
       - name: Fetch previously qualified release outputs
         if: github.ref_type == 'tag'
@@ -275,10 +275,10 @@ jobs:
         with: {artifact-ids: '${{ needs.check.outputs.candidate-id }}', path: artifacts/release, merge-multiple: true}
       - name: Import candidate
         if: github.event_name == 'workflow_dispatch'
-        uses: tdesaules/github-actions/workflow/import-pantavisor-candidate@1.5.0
+        uses: tdesaules/github-actions/workflow/import-pantavisor-candidate@1.6.1
       - name: Verify qualification before publication
         id: qualified
-        uses: tdesaules/github-actions/workflow/test-pantavisor-artifact@1.5.0
+        uses: tdesaules/github-actions/workflow/test-pantavisor-artifact@1.6.1
         with:
           revision: ${{ needs.check.outputs.revision }}
           receipt: artifacts/qualified-receipt.json
@@ -296,13 +296,13 @@ jobs:
           permission-contents: write
       - name: Finalize qualified commit and tag
         if: github.event_name == 'workflow_dispatch'
-        uses: tdesaules/github-actions/workflow/complete-pantavisor-release@1.5.0
+        uses: tdesaules/github-actions/workflow/complete-pantavisor-release@1.6.1
         with:
           token: ${{ steps.app.outputs.token }}
           artifact-id: ${{ needs.test.outputs.artifact-id }}
       - name: Publish exact OCI archive by digest
         if: github.ref_type == 'tag'
-        uses: tdesaules/github-actions/oci/publish-image@1.5.0
+        uses: tdesaules/github-actions/oci/publish-image@1.6.1
         with:
           source: oci-archive:dist/image.oci.tar
           destination: docker://ghcr.io/${{ github.repository }}@${{ steps.qualified.outputs.image-digest }}
@@ -311,7 +311,7 @@ jobs:
       - name: Publish component by digest
         if: github.ref_type == 'tag'
         id: component
-        uses: tdesaules/github-actions/oci/publish-component@1.5.0
+        uses: tdesaules/github-actions/oci/publish-component@1.6.1
         with:
           directory: dist/component
           registry: ghcr.io/${{ github.repository }}/component
@@ -321,7 +321,7 @@ jobs:
         id: security-signatures-sign-image
         continue-on-error: true
         if: github.ref_type == 'tag'
-        uses: tdesaules/github-actions/oci/new-image-signature@1.5.0
+        uses: tdesaules/github-actions/oci/new-image-signature@1.6.1
         with:
           image: ghcr.io/${{ github.repository }}@${{ steps.qualified.outputs.image-digest }}
           registry-username: ${{ github.actor }}
@@ -330,7 +330,7 @@ jobs:
         id: security-signatures-verify-image
         continue-on-error: true
         if: github.ref_type == 'tag'
-        uses: tdesaules/github-actions/oci/test-image-signature@1.5.0
+        uses: tdesaules/github-actions/oci/test-image-signature@1.6.1
         with:
           image: ghcr.io/${{ github.repository }}@${{ steps.qualified.outputs.image-digest }}
           identity: https://github.com/${{ github.repository }}/.github/workflows/main.yml@${{ github.ref }}
@@ -342,7 +342,7 @@ jobs:
         id: security-signatures-sign-component
         continue-on-error: true
         if: github.ref_type == 'tag'
-        uses: tdesaules/github-actions/oci/new-image-signature@1.5.0
+        uses: tdesaules/github-actions/oci/new-image-signature@1.6.1
         with:
           image: ${{ steps.component.outputs.reference }}
           registry-username: ${{ github.actor }}
@@ -351,7 +351,7 @@ jobs:
         id: security-signatures-verify-component
         continue-on-error: true
         if: github.ref_type == 'tag'
-        uses: tdesaules/github-actions/oci/test-image-signature@1.5.0
+        uses: tdesaules/github-actions/oci/test-image-signature@1.6.1
         with:
           image: ${{ steps.component.outputs.reference }}
           identity: https://github.com/${{ github.repository }}/.github/workflows/main.yml@${{ github.ref }}
@@ -362,7 +362,7 @@ jobs:
       - name: Summarize publication security
         if: always()
         continue-on-error: true
-        uses: tdesaules/github-actions/workflow/test-step-outcomes@1.5.0
+        uses: tdesaules/github-actions/workflow/test-step-outcomes@1.6.1
         env:
           SECURITY_COMPONENT: ${{ env.PROJECT }}
           SECURITY_SUBJECT: ${{ steps.component.outputs.reference }}
@@ -376,7 +376,7 @@ jobs:
           outcomes: ${{ toJSON(steps) }}
       - name: Publish GitHub Release
         if: github.ref_type == 'tag'
-        uses: tdesaules/github-actions/workflow/new-pantavisor-github-release@1.5.0
+        uses: tdesaules/github-actions/workflow/new-pantavisor-github-release@1.6.1
         with:
           receipt-digest: ${{ steps.provenance.outputs.receipt-digest }}
           component: ${{ steps.component.outputs.reference }}
@@ -414,7 +414,7 @@ jobs:
           repositories: ${{ github.event.repository.name }}
       - name: Update dependencies
         if: ${{ !cancelled() && steps.bot-token.outcome == 'success' }}
-        uses: tdesaules/github-actions/maintenance/update-dependencies@1.5.0
+        uses: tdesaules/github-actions/maintenance/update-dependencies@1.6.1
         with:
           repository: ${{ github.repository }}
           token: ${{ steps.bot-token.outputs.token }}
@@ -422,13 +422,13 @@ jobs:
       - name: Read published release
         id: published
         if: ${{ !cancelled() }}
-        uses: tdesaules/github-actions/workflow/read-pantavisor-published@1.5.0
+        uses: tdesaules/github-actions/workflow/read-pantavisor-published@1.6.1
         with: {token: '${{ github.token }}'}
       - name: Generate published image SBOM
         id: security-sbom
         continue-on-error: true
         if: ${{ !cancelled() && steps.published.outputs.has-release == 'true' }}
-        uses: tdesaules/github-actions/oci/new-sbom@1.5.0
+        uses: tdesaules/github-actions/oci/new-sbom@1.6.1
         env:
           SYFT_GOLANG_CAPTURE_SYMBOLS: all
           SYFT_FILE_METADATA_SELECTION: all
@@ -440,7 +440,7 @@ jobs:
         id: security-scan
         continue-on-error: true
         if: ${{ !cancelled() && steps.published.outputs.has-release == 'true' }}
-        uses: tdesaules/github-actions/oci/test-vulnerabilities@1.5.0
+        uses: tdesaules/github-actions/oci/test-vulnerabilities@1.6.1
         with:
           fail-on: none
           sbom: artifacts/maintenance/sbom.syft.json
@@ -448,7 +448,7 @@ jobs:
       - name: Summarize maintenance security
         if: always()
         continue-on-error: true
-        uses: tdesaules/github-actions/workflow/test-step-outcomes@1.5.0
+        uses: tdesaules/github-actions/workflow/test-step-outcomes@1.6.1
         env:
           SECURITY_COMPONENT: ${{ env.PROJECT }}
           SECURITY_REPORT: artifacts/maintenance/grype.json
@@ -462,8 +462,8 @@ jobs:
         with: {name: 'maintenance-reports-${{ github.run_attempt }}', path: artifacts/maintenance/}
       - name: List documentation
         id: files
-        uses: tdesaules/github-actions/workflow/get-changed-files@1.5.0
+        uses: tdesaules/github-actions/workflow/get-changed-files@1.6.1
         with: {full: 'true'}
       - name: Check documentation links
-        uses: tdesaules/github-actions/lint/lychee@1.5.0
+        uses: tdesaules/github-actions/lint/lychee@1.6.1
         with: {files: '${{ steps.files.outputs.lychee-files }}'}

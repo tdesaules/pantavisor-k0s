@@ -10,4 +10,3 @@
 - feat(build): bind k0s exports to verified provenance (f2b68ca)
 - feat(k0s): add standalone Kubernetes system component (2ff1676)
 - Initial commit (4b7e23f)
-
